@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Bill Summary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          padding: 16px;
+          max-width: 480px;
+          margin: 0 auto;
+        }
+        h1 {
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+        .card {
+          border-radius: 12px;
+          padding: 16px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          background: #ffffff;
+          margin-top: 12px;
+        }
+        ul {
+          padding-left: 1.2rem;
+        }
+        .total {
+          font-weight: 600;
+          margin-top: 8px;
+        }
+        .buttons {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+        }
+        button {
+          flex: 1;
+          padding: 10px 14px;
+          border-radius: 999px;
+          border: none;
+          font-size: 1rem;
+          cursor: pointer;
+        }
+        .approve {
+          background: #16a34a;
+          color: white;
+        }
+        .decline {
+          background: #f97373;
+          color: white;
+        }
+        .status {
+          margin-top: 16px;
+          font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<h1>Bill Summary</h1>
+<div id="content" class="card">
+    <p>Loading...</p>
+</div>
+
+<script>
+    function parseQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const name = params.get("name") || "Unknown";
+      const total = params.get("total") || "0.00";
+      const itemsRaw = params.get("items") || "";
+
+      // itemsString: "Coffee:3.20|Bread:5.50|Tax:0.60"
+      const items = itemsRaw
+        .split("|")
+        .filter(Boolean)
+        .map(part => {
+          const [itemName, price] = part.split(":");
+          return { name: itemName || "", price: price || "0.00" };
+        });
+
+      return { name, total, items };
+    }
+
+    function render() {
+      const { name, total, items } = parseQuery();
+      const container = document.getElementById("content");
+
+      const itemsHtml = items.length
+        ? `<ul>${items
+            .map(i => `<li>${i.name} — RM${Number(i.price).toFixed(2)}</li>`)
+            .join("")}</ul>`
+        : "<p>No items found.</p>";
+
+      container.innerHTML = `
+        <p><strong>Name:</strong> ${name}</p>
+        <p class="total"><strong>Total to pay:</strong> RM${Number(total).toFixed(2)}</p>
+        <p><strong>Items:</strong></p>
+        ${itemsHtml}
+        <div class="buttons">
+          <button class="decline" id="btn-decline">Decline</button>
+          <button class="approve" id="btn-approve">Approve</button>
+        </div>
+        <p class="status" id="status"></p>
+      `;
+
+      const statusEl = document.getElementById("status");
+      document.getElementById("btn-decline").onclick = () => {
+        statusEl.textContent = "You declined this bill. Please ask your friend to re-check the items.";
+      };
+      document.getElementById("btn-approve").onclick = () => {
+        statusEl.textContent = "Approved ✅ Please proceed with payment (cash / transfer / future online payment).";
+      };
+    }
+
+    render();
+</script>
+</body>
+</html>
