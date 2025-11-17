@@ -13,6 +13,7 @@
           background: #f5f5f5;
         }
         h1 {
+          text-align: center;
           font-size: 1.5rem;
           margin-bottom: 0.5rem;
         }
@@ -38,18 +39,22 @@
         button {
           flex: 1;
           padding: 10px 14px;
-          border-radius: 999px;
+          border-radius: 5px;
           border: none;
           font-size: 0.95rem;
           cursor: pointer;
         }
         .approve {
-          background: #16a34a;
+          background: #2743FD;
           color: white;
+          
         }
+
         .decline {
-          background: #f97373;
-          color: white;
+          background: white;
+          color: black;
+          border: 1px solid black; /* thin black border */
+          padding: 8px 14px;       /* optional: spacing */
         }
         .status {
           margin-top: 16px;
@@ -84,6 +89,9 @@
         }
         small {
           color: #6b7280;
+        }
+        p{
+            text-align: center
         }
     </style>
 </head>
@@ -131,8 +139,10 @@
         : "<p>No items found.</p>";
 
       container.innerHTML = `
-        <p><strong>Name:</strong> ${name}</p>
-        <p class="total"><strong>Total to pay:</strong> RM${Number(total).toFixed(2)}</p>
+        <p style="font-size: 20px"><strong>Name:</strong></p>
+        <p>${name}</p>
+        <p style="font-size: 20px" class="total">Total Amount:</p> 
+        <p style="font-size: 30px">RM${Number(total).toFixed(2)}</p>
         <p><strong>Items:</strong></p>
         ${itemsHtml}
 
@@ -161,13 +171,13 @@
       const paymentStatus = document.getElementById("payment-status");
 
       document.getElementById("btn-decline").onclick = () => {
-        statusEl.textContent = "You declined this bill. Please ask your friend to re-check the items.";
+        statusEl.textContent = "You've declined this bill. Please ask your friend to re-check the items.";
         paymentSection.style.display = "none";
         paymentStatus.textContent = "";
       };
 
       document.getElementById("btn-approve").onclick = () => {
-        statusEl.textContent = "Approved ✅ Please choose a payment method below.";
+        statusEl.textContent = "Please select a payment method below.";
         paymentSection.style.display = "block";
       };
 
