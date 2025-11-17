@@ -119,11 +119,9 @@
     <p>Loading...</p>
 </div>
 
-<!-- Stripe JS -->
 <script src="https://js.stripe.com/v3/"></script>
 
 <script>
-    // ---------- Parse query ----------
     function parseQuery() {
       const params = new URLSearchParams(window.location.search);
       const name = params.get("name") || "Unknown";
@@ -146,7 +144,7 @@
     const total = parsed.total;
     const items = parsed.items;
 
-    // ---------- Render summary + approve/decline + hidden payment section ----------
+    // Render summary & approve/decline & hidden payment section
     function render() {
       const container = document.getElementById("content");
 
@@ -196,12 +194,12 @@
       };
 
       document.getElementById("btn-approve").onclick = () => {
-        statusEl.textContent = "Please select a payment method below.";
+        statusEl.textContent = "Please select a payment method below";
         paymentSection.style.display = "block";
       };
 
       // ---------- Stripe setup ----------
-      // TODO: replace with your real Stripe publishable key from dashboard
+      // Insert real Stripe publishable key
       const stripe = Stripe("pk_test_51SUSZGFUV9o1dicZfFwW6lZz0HzOrLyUcQUX6sXfHvflMeodp4l2Zy16qItvAQRbGRraPvLkiDz2xZJvvR9T0ptG00nCleYpEz");
 
       async function startPayment(method) {
@@ -215,7 +213,7 @@
               body: JSON.stringify({
                 name,
                 total,
-                payment_method: method   // "card" or "bank"
+                payment_method: method 
               })
             }
           );
