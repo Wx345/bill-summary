@@ -10,6 +10,7 @@
           padding: 16px;
           max-width: 480px;
           margin: 0 auto;
+          background: #f5f5f5;
         }
         h1 {
           font-size: 1.5rem;
@@ -39,7 +40,7 @@
           padding: 10px 14px;
           border-radius: 999px;
           border: none;
-          font-size: 1rem;
+          font-size: 0.95rem;
           cursor: pointer;
         }
         .approve {
@@ -54,6 +55,36 @@
           margin-top: 16px;
           font-weight: 500;
         }
+        #payment-section {
+          margin-top: 18px;
+          border-top: 1px solid #e5e5e5;
+          padding-top: 12px;
+        }
+        .payment-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .payment-buttons button {
+          flex: unset;
+          width: 100%;
+        }
+        .pay-card {
+          background: #4f46e5;
+          color: #fff;
+        }
+        .pay-bank {
+          background: #0ea5e9;
+          color: #fff;
+        }
+        .pay-duitnow {
+          background: #f97316;
+          color: #fff;
+        }
+        small {
+          color: #6b7280;
+        }
     </style>
 </head>
 <body>
@@ -62,14 +93,17 @@
     <p>Loading...</p>
 </div>
 
+<!-- Stripe JS -->
+<script src="https://js.stripe.com/v3/"></script>
+
 <script>
+    // ---------- Parse query ----------
     function parseQuery() {
       const params = new URLSearchParams(window.location.search);
       const name = params.get("name") || "Unknown";
       const total = params.get("total") || "0.00";
       const itemsRaw = params.get("items") || "";
 
-      // itemsString: "Coffee:3.20|Bread:5.50|Tax:0.60"
       const items = itemsRaw
         .split("|")
         .filter(Boolean)
@@ -81,8 +115,13 @@
       return { name, total, items };
     }
 
+    const parsed = parseQuery();
+    const name = parsed.name;
+    const total = parsed.total;
+    const items = parsed.items;
+
+    // ---------- Render summary + approve/decline + hidden payment section ----------
     function render() {
-      const { name, total, items } = parseQuery();
       const container = document.getElementById("content");
 
       const itemsHtml = items.length
@@ -96,19 +135,90 @@
         <p class="total"><strong>Total to pay:</strong> RM${Number(total).toFixed(2)}</p>
         <p><strong>Items:</strong></p>
         ${itemsHtml}
+
+        <!-- Step 1: Approve / Decline -->
         <div class="buttons">
           <button class="decline" id="btn-decline">Decline</button>
           <button class="approve" id="btn-approve">Approve</button>
         </div>
         <p class="status" id="status"></p>
+
+        <!-- Step 2: Payment methods (hidden until Approve) -->
+        <div id="payment-section" style="display:none;">
+          <h3>Choose payment method</h3>
+          <small>Powered by Stripe. Your payment is processed securely.</small>
+          <div class="payment-buttons">
+            <button class="pay-card" id="pay-card-btn">Pay with Card</button>
+            <button class="pay-bank" id="pay-bank-btn">Pay from Bank Account</button>
+            <button class="pay-duitnow" id="pay-duitnow-btn">Pay with DuitNow</button>
+          </div>
+          <p id="payment-status" class="status" style="margin-top:10px;"></p>
+        </div>
       `;
 
       const statusEl = document.getElementById("status");
+      const paymentSection = document.getElementById("payment-section");
+      const paymentStatus = document.getElementById("payment-status");
+
       document.getElementById("btn-decline").onclick = () => {
         statusEl.textContent = "You declined this bill. Please ask your friend to re-check the items.";
+        paymentSection.style.display = "none";
+        paymentStatus.textContent = "";
       };
+
       document.getElementById("btn-approve").onclick = () => {
-        statusEl.textContent = "Approved ✅ Please proceed with payment (cash / transfer / future online payment).";
+        statusEl.textContent = "Approved ✅ Please choose a payment method below.";
+        paymentSection.style.display = "block";
+      };
+
+      // ---------- Stripe setup ----------
+      // TODO: replace with your real Stripe publishable key from dashboard
+      const stripe = Stripe("pk_test_REPLACE_WITH_YOUR_PUBLISHABLE_KEY");
+
+      async function startPayment(method) {
+        paymentStatus.textContent = "Redirecting to secure payment page...";
+        try {
+          const res = await fetch(
+            "https://splitbill-backend-is66.onrender.com/create-checkout-session",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name,
+                total,
+                payment_method: method   // "card" or "bank"
+              })
+            }
+          );
+
+          const data = await res.json();
+          if (!data.sessionId) {
+            paymentStatus.textContent = "Error: Could not start payment.";
+            return;
+          }
+
+          const { error } = await stripe.redirectToCheckout({
+            sessionId: data.sessionId
+          });
+
+          if (error) {
+            paymentStatus.textContent = error.message || "Payment failed to start.";
+          }
+        } catch (e) {
+          paymentStatus.textContent = "Network error starting payment.";
+        }
+      }
+
+      // Buttons for payment methods
+      document.getElementById("pay-card-btn").onclick = () => {
+        startPayment("card");
+      };
+      document.getElementById("pay-bank-btn").onclick = () => {
+        startPayment("bank");
+      };
+      document.getElementById("pay-duitnow-btn").onclick = () => {
+        paymentStatus.textContent =
+          "DuitNow integration coming soon. Please select Card or Bank for now.";
       };
     }
 
