@@ -110,6 +110,21 @@
         p{
             text-align: center
         }
+        
+        ul.items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.items-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 16px;
+}
+
     </style>
 </head>
 <body>
@@ -149,10 +164,11 @@
       const container = document.getElementById("content");
 
       const itemsHtml = items.length
-        ? `<ul>${items
-            .map(i => `<li>${i.name} — RM${Number(i.price).toFixed(2)}</li>`)
-            .join("")}</ul>`
-        : "<p>No items found.</p>";
+      ? `<ul class="items-list">${items
+          .map(i => `<li><span>${i.name}</span><span>RM${Number(i.price).toFixed(2)}</span></li>`)
+          .join("")}</ul>`
+      : "<p>No items found.</p>";
+
 
       container.innerHTML = `
         <p style="font-size: 30px"><strong>Bill Summary</strong></p>
