@@ -1,20 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Payment Successful</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      text-align: center;
-      padding: 40px 16px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Payment Success</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
-  <h1>🎉 Payment Successful!</h1>
-  <p>Thank you for your payment.</p>
-  <p>You may close this page now.</p>
+  <h2>Payment successful!</h2>
+  <p>You can close this page and return to the app.</p>
+
+  <script>
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const paymentId = params.get("paymentId");
+
+      if (!paymentId) return;
+
+      try {
+        await fetch(
+          "https://splitbill-backend-is66.onrender.com/api/payment-status",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentId, status: "approved" }),
+          }
+        );
+      } catch (e) {
+        console.error("Failed to notify backend about success", e);
+      }
+    })();
+  </script>
 </body>
 </html>
