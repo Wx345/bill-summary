@@ -213,13 +213,32 @@
     const paymentSection = document.getElementById("payment-section");
     const paymentStatus = document.getElementById("payment-status");
 
-    document.getElementById("btn-decline").onclick = () => {
-      statusEl.textContent =
-        "You've declined this bill. Please ask your friend to re-check the items.";
-      paymentSection.style.display = "none";
-      paymentStatus.textContent = "";
-      // (Optional) You *could* POST status=declined to backend here if you want immediate notification
-    };
+    document.getElementById("btn-decline").onclick = async () => {
+  statusEl.textContent =
+    "You've declined this bill. Please ask your friend to re-check the items.";
+  paymentSection.style.display = "none";
+  paymentStatus.textContent = "";
+
+  // ⬇️ notify backend immediately so the other phone can see it
+  if (paymentId) {
+    try {
+      await fetch(
+        "https://splitbill-backend-is66.onrender.com/api/payment-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentId,
+            status: "declined",
+          }),
+        }
+      );
+    } catch (e) {
+      console.error("Failed to notify backend about decline", e);
+    }
+  }
+};
+
 
     document.getElementById("btn-approve").onclick = () => {
       statusEl.textContent = "Please select a payment method below";
