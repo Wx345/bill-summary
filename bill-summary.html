@@ -137,43 +137,50 @@
     <p>Loading...</p>
 </div>
 
-<script src="https://js.stripe.com/v3/"></script>
+<script src="https://js.stripe.com/v3"></script>
 
 <script>
-    function parseQuery() {
-      const params = new URLSearchParams(window.location.search);
-      const name = params.get("name") || "Unknown";
-      const total = params.get("total") || "0.00";
-      const itemsRaw = params.get("items") || "";
+  // Read query params (name, total, items, paymentId)
+  function parseQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const name = params.get("name") || "Unknown";
+    const total = params.get("total") || "0.00";
+    const itemsRaw = params.get("items") || "";
+    const paymentId = params.get("paymentId") || null; // 👈 from QR
 
-      const items = itemsRaw
-        .split("|")
-        .filter(Boolean)
-        .map(part => {
-          const [itemName, price] = part.split(":");
-          return { name: itemName || "", price: price || "0.00" };
-        });
+    const items = itemsRaw
+      .split("|")
+      .filter(Boolean)
+      .map((part) => {
+        const [itemName, price] = part.split(":");
+        return { name: itemName || "", price: price || "0.00" };
+      });
 
-      return { name, total, items };
-    }
+    return { name, total, items, paymentId };
+  }
 
-    const parsed = parseQuery();
-    const name = parsed.name;
-    const total = parsed.total;
-    const items = parsed.items;
+  // Parsed values
+  const parsed = parseQuery();
+  const name = parsed.name;
+  const total = parsed.total;
+  const items = parsed.items;
+  const paymentId = parsed.paymentId; // 👈 use this later
 
-    // Render summary & approve/decline & hidden payment section
-    function render() {
-      const container = document.getElementById("content");
+  function render() {
+    const container = document.getElementById("content");
 
-      const itemsHtml = items.length
+    const itemsHtml = items.length
       ? `<ul class="items-list">${items
-          .map(i => `<li><span>${i.name}</span><span>RM${Number(i.price).toFixed(2)}</span></li>`)
+          .map(
+            (i) =>
+              `<li><span>${i.name}</span><span>RM${Number(i.price).toFixed(
+                2
+              )}</span></li>`
+          )
           .join("")}</ul>`
       : "<p>No items found.</p>";
 
-
-      container.innerHTML = `
+    container.innerHTML = `
         <p style="font-size: 30px"><strong>Bill Summary</strong></p>
         <p style="font-size: 20px"><strong>Name:</strong></p>
         <p>${name}</p>
@@ -202,73 +209,81 @@
         </div>
       `;
 
-      const statusEl = document.getElementById("status");
-      const paymentSection = document.getElementById("payment-section");
-      const paymentStatus = document.getElementById("payment-status");
+    const statusEl = document.getElementById("status");
+    const paymentSection = document.getElementById("payment-section");
+    const paymentStatus = document.getElementById("payment-status");
 
-      document.getElementById("btn-decline").onclick = () => {
-        statusEl.textContent = "You've declined this bill. Please ask your friend to re-check the items.";
-        paymentSection.style.display = "none";
-        paymentStatus.textContent = "";
-      };
+    document.getElementById("btn-decline").onclick = () => {
+      statusEl.textContent =
+        "You've declined this bill. Please ask your friend to re-check the items.";
+      paymentSection.style.display = "none";
+      paymentStatus.textContent = "";
+      // (Optional) You *could* POST status=declined to backend here if you want immediate notification
+    };
 
-      document.getElementById("btn-approve").onclick = () => {
-        statusEl.textContent = "Please select a payment method below";
-        paymentSection.style.display = "block";
-      };
+    document.getElementById("btn-approve").onclick = () => {
+      statusEl.textContent = "Please select a payment method below";
+      paymentSection.style.display = "block";
+      // (Optional) You could POST status='approved-intent' here
+    };
 
-      // ---------- Stripe setup ----------
-      // Insert real Stripe publishable key
-      const stripe = Stripe("pk_test_51SUSZGFUV9o1dicZfFwW6lZz0HzOrLyUcQUX6sXfHvflMeodp4l2Zy16qItvAQRbGRraPvLkiDz2xZJvvR9T0ptG00nCleYpEz");
+    // ---------- Stripe setup ----------
+    const stripe = Stripe(
+      "pk_test_51SUSZGFUV9o1dicZfFwW6lZz0HzOrLyUcQUX6sXfHvflMeodp4l2Zy16qItvAQRbGRraPvLkiDz2xZJvvR9T0ptG00nCleYpEz"
+    );
 
-      async function startPayment(method) {
-        paymentStatus.textContent = "Redirecting to secure payment page...";
-        try {
-          const res = await fetch(
-            "https://splitbill-backend-is66.onrender.com/create-checkout-session",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name,
-                total,
-                payment_method: method 
-              })
-            }
-          );
+    async function startPayment(method) {
+      paymentStatus.textContent = "Redirecting to secure payment page...";
 
-          const data = await res.json();
-          if (!data.sessionId) {
-            paymentStatus.textContent = "Error: Could not start payment.";
-            return;
+      try {
+        const res = await fetch(
+          "https://splitbill-backend-is66.onrender.com/create-checkout-session",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              total,
+              payment_method: method,
+              paymentId, // 👈 send to backend so it can track
+            }),
           }
+        );
 
-          const { error } = await stripe.redirectToCheckout({
-            sessionId: data.sessionId
-          });
-
-          if (error) {
-            paymentStatus.textContent = error.message || "Payment failed to start.";
-          }
-        } catch (e) {
-          paymentStatus.textContent = "Network error starting payment.";
+        const data = await res.json();
+        if (!data.sessionId) {
+          paymentStatus.textContent = "Error: Could not start payment.";
+          return;
         }
-      }
 
-      // Buttons for payment methods
-      document.getElementById("pay-card-btn").onclick = () => {
-        startPayment("card");
-      };
-      document.getElementById("pay-bank-btn").onclick = () => {
-        startPayment("bank");
-      };
-      document.getElementById("pay-duitnow-btn").onclick = () => {
-        paymentStatus.textContent =
-          "DuitNow integration coming soon. Please select Card or Bank for now.";
-      };
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+
+        if (error) {
+          paymentStatus.textContent =
+            error.message || "Payment failed to start.";
+        }
+      } catch (e) {
+        console.error(e);
+        paymentStatus.textContent = "Network error starting payment.";
+      }
     }
 
-    render();
+    // Buttons for payment methods
+    document.getElementById("pay-card-btn").onclick = () => {
+      startPayment("card");
+    };
+    document.getElementById("pay-bank-btn").onclick = () => {
+      startPayment("bank");
+    };
+    document.getElementById("pay-duitnow-btn").onclick = () => {
+      paymentStatus.textContent =
+        "DuitNow integration coming soon. Please select Card or Bank for now.";
+    };
+  }
+
+  render();
 </script>
 </body>
 </html>
