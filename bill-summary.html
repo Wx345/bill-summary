@@ -240,11 +240,30 @@
 };
 
 
-    document.getElementById("btn-approve").onclick = () => {
-      statusEl.textContent = "Please select a payment method below";
-      paymentSection.style.display = "block";
-      // (Optional) You could POST status='approved-intent' here
-    };
+    document.getElementById("btn-approve").onclick = async () => {
+  statusEl.textContent = "Please select a payment method below";
+  paymentSection.style.display = "block";
+
+  // 👇 Notify backend that this user has approved the bill
+  if (paymentId) {
+    try {
+      await fetch(
+        "https://splitbill-backend-is66.onrender.com/api/payment-status",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            paymentId,
+            status: "approved", // we treat this as "other person approved"
+          }),
+        }
+      );
+    } catch (e) {
+      console.error("Failed to notify backend about approval", e);
+    }
+  }
+};
+
 
     // ---------- Stripe setup ----------
     const stripe = Stripe(
