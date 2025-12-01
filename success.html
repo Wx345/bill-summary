@@ -9,26 +9,27 @@
   <h2>Payment successful!</h2>
   <p>You can close this page and return to the app.</p>
 
-  <script>
-    (async function () {
-      const params = new URLSearchParams(window.location.search);
-      const paymentId = params.get("paymentId");
+<script>
+  (async function () {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get("paymentId");
 
-      if (!paymentId) return;
+    if (!paymentId) {
+      console.error("No paymentId in success URL");
+      return;
+    }
 
-      try {
-        await fetch(
-          "https://splitbill-backend-is66.onrender.com/api/payment-status",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ paymentId, status: "approved" }),
-          }
-        );
-      } catch (e) {
-        console.error("Failed to notify backend about success", e);
-      }
-    })();
-  </script>
+    try {
+      await fetch("https://splitbill-backend-is66.onrender.com/api/payment-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentId, status: "succeeded" }),
+      });
+    } catch (e) {
+      console.error("Failed to notify backend about success", e);
+    }
+  })();
+</script>
+
 </body>
 </html>
