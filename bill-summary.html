@@ -143,10 +143,14 @@
   // Read query params (name, total, items, paymentId)
   function parseQuery() {
     const params = new URLSearchParams(window.location.search);
-    const name = params.get("name") || "Unknown";
-    const total = params.get("total") || "0.00";
-    const itemsRaw = params.get("items") || "";
-    const paymentId = params.get("paymentId") || null; // 👈 from QR
+
+    const name         = params.get("name") || "Unknown";    // payer
+    const total        = params.get("total") || "0.00";
+    const itemsRaw     = params.get("items") || "";
+    const paymentId    = params.get("paymentId") || null;
+    const receiverName = params.get("receiverName") || "Receiver";
+    const receiverBank = params.get("receiverBank") || "No bank saved";
+
 
     const items = itemsRaw
       .split("|")
