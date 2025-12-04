@@ -185,13 +185,21 @@
       : "<p>No items found.</p>";
 
     container.innerHTML = `
-        <p style="font-size: 30px"><strong>Bill Summary</strong></p>
-        <p style="font-size: 20px"><strong>Name:</strong></p>
-        <p>${name}</p>
-        <p style="font-size: 20px" class="total">Total Amount:</p> 
-        <p style="font-size: 30px">RM${Number(total).toFixed(2)}</p>
-        <p style="font-size: 20px"><strong>Items:</strong></p>
-        ${itemsHtml}
+      <p style="font-size: 30px"><strong>Bill Summary</strong></p>
+      <p style="font-size: 20px"><strong>Name:</strong></p>
+      <p>${name}</p>
+    
+      <p style="font-size: 20px" class="total">Total Amount:</p> 
+      <p style="font-size: 30px">RM${Number(total).toFixed(2)}</p>
+    
+      <p style="font-size: 20px"><strong>Items:</strong></p>
+      ${itemsHtml}
+    
+      <div class="card">
+        <p><strong>Paying to:</strong> ${receiverName}</p>
+        <p><strong>Receiver’s bank:</strong> ${receiverBank}</p>
+        <small>Payment is processed via Stripe test environment.</small>
+      </div>
 
         <!-- Step 1: Approve / Decline -->
         <div class="buttons">
