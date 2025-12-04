@@ -142,33 +142,36 @@
 <script>
   // Read query params (name, total, items, paymentId)
   function parseQuery() {
-    const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
 
-    const name         = params.get("name") || "Unknown";    // payer
-    const total        = params.get("total") || "0.00";
-    const itemsRaw     = params.get("items") || "";
-    const paymentId    = params.get("paymentId") || null;
-    const receiverName = params.get("receiverName") || "Receiver";
-    const receiverBank = params.get("receiverBank") || "No bank saved";
+  const name         = params.get("name") || "Unknown";    // payer
+  const total        = params.get("total") || "0.00";
+  const itemsRaw     = params.get("items") || "";
+  const paymentId    = params.get("paymentId") || null;
+  const receiverName = params.get("receiverName") || "Receiver";
+  const receiverBank = params.get("receiverBank") || "No bank saved";
 
+  const items = itemsRaw
+    .split("|")
+    .filter(Boolean)
+    .map((part) => {
+      const [itemName, price] = part.split(":");
+      return { name: itemName || "", price: price || "0.00" };
+    });
 
-    const items = itemsRaw
-      .split("|")
-      .filter(Boolean)
-      .map((part) => {
-        const [itemName, price] = part.split(":");
-        return { name: itemName || "", price: price || "0.00" };
-      });
+  // IMPORTANT: include receiverName & receiverBank in return
+  return { name, total, items, paymentId, receiverName, receiverBank };
+}
 
-    return { name, total, items, paymentId };
-  }
+// Parsed values
+const parsed       = parseQuery();
+const name         = parsed.name;
+const total        = parsed.total;
+const items        = parsed.items;
+const paymentId    = parsed.paymentId;
+const receiverName = parsed.receiverName;
+const receiverBank = parsed.receiverBank;
 
-  // Parsed values
-  const parsed = parseQuery();
-  const name = parsed.name;
-  const total = parsed.total;
-  const items = parsed.items;
-  const paymentId = parsed.paymentId; // 👈 use this later
 
   function render() {
     const container = document.getElementById("content");
