@@ -261,7 +261,7 @@ const receiverBank = parsed.receiverBank;
 
 
 
-    document.getElementById("btn-approve").onclick = async () => {
+  document.getElementById("btn-approve").onclick = () => {
   const confirmApprove = confirm("Are you sure you want to approve this payment?");
   if (!confirmApprove) return;
 
@@ -270,27 +270,15 @@ const receiverBank = parsed.receiverBank;
     return;
   }
 
-  try {
-    // Notify backend just like Decline, but with status "approved"
-    await fetch("https://splitbill-backend-is66.onrender.com/api/payment-status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentId, status: "approved" }),
-    });
+  // Update UI: show payment options, disable buttons
+  const statusEl = document.getElementById("status");
+  const paymentSection = document.getElementById("payment-section");
 
-    // Update UI: show payment options, disable decline
-    const statusEl = document.getElementById("status");
-    const paymentSection = document.getElementById("payment-section");
+  statusEl.textContent = "You approved this bill. Please select a payment method below.";
+  paymentSection.style.display = "block";
 
-    statusEl.textContent = "You approved this bill. Please select a payment method below.";
-    paymentSection.style.display = "block";
-
-    document.getElementById("btn-approve").disabled = true;
-    document.getElementById("btn-decline").disabled = true;
-  } catch (e) {
-    console.error("Failed to notify backend about approval", e);
-    alert("Failed to notify the app. Please try again.");
-  }
+  document.getElementById("btn-approve").disabled = true;
+  document.getElementById("btn-decline").disabled = true;
 };
 
 
