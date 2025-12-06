@@ -151,7 +151,7 @@
   const paymentId    = params.get("paymentId") || null;
   const receiverName = params.get("receiverName") || "Receiver";
   const receiverBank = params.get("receiverBank") || "No bank saved";
-  
+  const receiverCard = params.get("receiverCard") || "";
 
   const items = itemsRaw
     .split("|")
@@ -161,11 +161,18 @@
       return { name: itemName || "", price: price || "0.00" };
     });
 
-  // IMPORTANT: include receiverName & receiverBank in return
-  return { name, total, items, paymentId, receiverName, receiverBank, method};
+  return {
+    name,
+    total,
+    items,
+    paymentId,
+    receiverName,
+    receiverBank,
+    receiverCard,
+    method
+  };
 }
 
-// Parsed values
 const parsed       = parseQuery();
 const name         = parsed.name;
 const total        = parsed.total;
@@ -174,6 +181,8 @@ const method       = parsed.method;
 const paymentId    = parsed.paymentId;
 const receiverName = parsed.receiverName;
 const receiverBank = parsed.receiverBank;
+const receiverCard = parsed.receiverCard;
+
 
 
   function render() {
