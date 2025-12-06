@@ -188,53 +188,83 @@ const receiverCard = parsed.receiverCard;
   function render() {
     const container = document.getElementById("content");
 
+    // ---------- FIXED: compute this BEFORE HTML ----------
+    const methodInfoHtml = (() => {
+        if (method === "card") {
+            const cardText = receiverCard || "Saved card (Stripe)";
+            return `
+                <p><strong>Payment method:</strong> Card (Stripe Checkout)</p>
+                <p><strong>Card destination:</strong> ${cardText}</p>
+            `;
+        } else if (method === "qr") {
+            return `
+                <p><strong>Payment method:</strong> QR Payment</p>
+                <p><small>You will pay using the receiver's QR (Touch 'n Go / DuitNow).</small></p>
+            `;
+        } else {
+            return `
+                <p><strong>Payment method:</strong> Bank Transfer</p>
+                <p><strong>Receiver’s bank:</strong> ${receiverBank}</p>
+            `;
+        }
+    })();
+    // ------------------------------------------------------
+
+
     const itemsHtml = items.length
       ? `<ul class="items-list">${items
           .map(
             (i) =>
-              `<li><span>${i.name}</span><span>RM${Number(i.price).toFixed(
-                2
-              )}</span></li>`
+              `<li><span>${i.name}</span><span>RM${Number(i.price).toFixed(2)}</span></li>`
           )
           .join("")}</ul>`
       : "<p>No items found.</p>";
 
+
+    // ---------- FIXED TEMPLATE STRING ----------
     container.innerHTML = `
       <p style="font-size: 30px"><strong>Bill Summary</strong></p>
+
       <p style="font-size: 20px"><strong>Name:</strong></p>
       <p>${name}</p>
-    
+
       <p style="font-size: 20px" class="total">Total Amount:</p> 
       <p style="font-size: 30px">RM${Number(total).toFixed(2)}</p>
-    
+
       <p style="font-size: 20px"><strong>Items:</strong></p>
       ${itemsHtml}
-    
+
       <div class="card">
         <p><strong>Paying to:</strong> ${receiverName}</p>
-        <p><strong>Receiver’s bank:</strong> ${receiverBank}</p>
+
+        <!-- INSERT CORRECT DISPLAY BLOCK -->
+        ${methodInfoHtml}
+
         <small>Payment is processed via Stripe test environment.</small>
       </div>
 
-        <!-- Step 1: Approve / Decline -->
-        <div class="buttons">
-          <button class="decline" id="btn-decline">Decline</button>
-          <button class="approve" id="btn-approve">Approve</button>
-        </div>
-        <p class="status" id="status"></p>
+      <!-- Approve / Decline -->
+      <div class="buttons">
+        <button class="decline" id="btn-decline">Decline</button>
+        <button class="approve" id="btn-approve">Approve</button>
+      </div>
 
-        <!-- Step 2: Payment methods (hidden until Approve) -->
-        <div id="payment-section" style="display:none;">
-          <h3>Choose payment method</h3>
-          <small>Powered by Stripe. Your payment is processed securely.</small>
-          <div class="payment-buttons">
-            <button class="pay-card" id="pay-card-btn">Pay with Card</button>
-            <button class="pay-bank" id="pay-bank-btn">Pay from Bank Account</button>
-            <button class="pay-duitnow" id="pay-duitnow-btn">Pay with DuitNow</button>
-          </div>
-          <p id="payment-status" class="status" style="margin-top:10px;"></p>
+      <p class="status" id="status"></p>
+
+      <!-- Payment section -->
+      <div id="payment-section" style="display:none;">
+        <h3>Choose payment method</h3>
+        <small>Powered by Stripe. Your payment is processed securely.</small>
+
+        <div class="payment-buttons">
+          <button class="pay-card" id="pay-card-btn">Pay with Card</button>
+          <button class="pay-bank" id="pay-bank-btn">Pay from Bank Account</button>
+          <button class="pay-duitnow" id="pay-duitnow-btn">Pay with DuitNow</button>
         </div>
-      `;
+
+        <p id="payment-status" class="status"></p>
+      </div>
+    `;
 
     const statusEl = document.getElementById("status");
     const paymentSection = document.getElementById("payment-section");
