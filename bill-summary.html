@@ -348,8 +348,18 @@ const receiverCard = parsed.receiverCard;
         );
 
         const data = await res.json();
+
+        if (!res.ok) {
+          // backend returned 4xx/5xx
+          const msg = data.error || "Backend error creating session.";
+          console.error("Backend error:", data);
+          paymentStatus.textContent = "Error: " + msg;
+          return;
+        }
+    
         if (!data.sessionId) {
-          paymentStatus.textContent = "Error: Could not start payment.";
+          console.error("No sessionId in response:", data);
+          paymentStatus.textContent = "Error: Could not start payment (no sessionId).";
           return;
         }
 
