@@ -17,7 +17,6 @@
       if (!paymentId) return;
 
       try {
-        await fetch(
           await fetch("https://splitzy-backend.vercel.app/api/payment-status",
           {
             method: "POST",
