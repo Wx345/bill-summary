@@ -321,10 +321,7 @@ const receiverCard = parsed.receiverCard;
 };
 
 
-
-
-
-    // ---------- Stripe setup ----------
+        // ---------- Stripe setup ----------
     const stripe = Stripe(
       "pk_test_51SUSZ32Y5rHaccD0UntYJEEk0EuXyODmKMNkPlL2D9zDEf09Itk29bDeaJt3uPfNFQTDnaDuxDcgPJwfn9AaFbvc00yZnK6uhE"
     );
@@ -333,47 +330,41 @@ const receiverCard = parsed.receiverCard;
       paymentStatus.textContent = "Redirecting to secure payment page...";
 
       try {
-        async function startPayment(method) {
-  paymentStatus.textContent = "Redirecting to secure payment page...";
+        const res = await fetch(
+          "https://splitbill-backend-is66.onrender.com/create-checkout-session",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              total,
+              payment_method: method,
+              paymentId, // 👈 VERY IMPORTANT
+            }),
+          }
+        );
 
-  try {
-    const res = await fetch(
-      "https://splitbill-backend-is66.onrender.com/create-checkout-session",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          total,
-          payment_method: method,
-          paymentId, // 👈 VERY IMPORTANT
-        }),
+        const data = await res.json();
+
+        if (!res.ok || !data.sessionId) {
+          const msg = data.error || "Could not start payment.";
+          paymentStatus.textContent = "Error: " + msg;
+          console.error("Checkout error payload:", data);
+          return;
+        }
+
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+
+        if (error) {
+          paymentStatus.textContent =
+            error.message || "Payment failed to start.";
+        }
+      } catch (e) {
+        console.error(e);
+        paymentStatus.textContent = "Network error starting payment.";
       }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok || !data.sessionId) {
-      // Show detailed error, if any
-      const msg = data.error || "Could not start payment.";
-      paymentStatus.textContent = "Error: " + msg;
-      console.error("Checkout error payload:", data);
-      return;
-    }
-
-    const { error } = await stripe.redirectToCheckout({
-      sessionId: data.sessionId,
-    });
-
-    if (error) {
-      paymentStatus.textContent =
-        error.message || "Payment failed to start.";
-    }
-  } catch (e) {
-    console.error(e);
-    paymentStatus.textContent = "Network error starting payment.";
-  }
-}
     }
 
     // Buttons for payment methods
