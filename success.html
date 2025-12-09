@@ -20,7 +20,7 @@
     }
 
     try {
-      await fetch("https://splitbill-backend-is66.onrender.com/api/payment-status", {
+      await fetch("https://splitzy-backend.vercel.app/api/payment-status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ paymentId, status: "succeeded" }),
